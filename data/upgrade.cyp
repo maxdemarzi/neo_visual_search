@@ -3,8 +3,6 @@ CREATE INDEX ON :Director(name);
 CREATE INDEX ON :Writer(name);
 CREATE INDEX ON :Producer(name);
 CREATE INDEX ON :Movie(title);
-CREATE INDEX ON :Movie(released);
-CREATE INDEX ON :Movie(tagline);
 CREATE INDEX ON :User(name);
 
 MATCH node
