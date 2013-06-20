@@ -1,0 +1,16 @@
+!!!
+%html
+  %head
+    %link(rel="stylesheet" href="/css/visualsearch-datauri.css")
+    %script{:src => "/js/dependencies.js"}
+    %script{:src => "/js/visualsearch.js"}
+    %script{:src => "/js/neo_visualsearch.js"}
+    %title Neo Visual Search
+
+  %body
+    %div#graph
+    %header
+      %section#title
+        %h1 Neo Visual Search
+    %section#content
+      = yield
