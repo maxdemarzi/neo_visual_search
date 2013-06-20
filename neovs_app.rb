@@ -20,7 +20,8 @@ class App < Sinatra::Base
    
   get '/facets' do
     content_type :json
-
+    cache_control :public, :must_revalidate, :max_age => 600
     $neo.list_labels.to_json    
   end
+  
 end

@@ -1,4 +1,13 @@
-  $(document).ready(function() {
+$(document).ready(function() {
+  var facets=[];
+  $.ajax("/facets", {
+         type:"GET",
+         dataType:"json",
+         success:function (res) {
+            facets = res;
+        }
+    });	
+
     var visualSearch = VS.init({
       container  : $('#search_box_container'),
       query      : 'country: "United States" "U.S. State": "New York" account: 5-samuel',
@@ -28,12 +37,7 @@
           }, 2000);
         },
         facetMatches : function(callback) {
-          callback([
-            'account', 'filter', 'access', 'title',
-            { label: 'city',       category: 'location' },
-            { label: 'country',    category: 'location' },
-            { label: 'U.S. State', category: 'location' },
-          ]);
+          callback(facets);
         },
         valueMatches : function(facet, searchTerm, callback) {
           switch (facet) {
