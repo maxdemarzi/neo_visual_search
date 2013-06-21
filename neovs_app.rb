@@ -14,6 +14,13 @@ class App < Sinatra::Base
   set :haml, :format => :html5 
   set :app_file, __FILE__
 
+  helpers do
+    def get_properties(category)
+      cypher = "MATCH n:#{category} RETURN n LIMIT 1"
+      $neo.execute_query(cypher)["data"].first.first["data"].keys
+    end
+  end
+
   get '/' do
     haml :index
   end
@@ -21,31 +28,38 @@ class App < Sinatra::Base
   get '/facets' do
     content_type :json
     cache_control :public, :must_revalidate, :max_age => 600
-    $neo.list_labels.to_json    
+    facets = []
+    categories = $neo.list_labels    
+    categories.each do |cat| 
+      get_properties(cat).each do |label|
+        facets << {:category => cat, :label => cat + "." + label} 
+      end
+    end
+    facets.to_json
   end
 
   get '/values/:facet/' do
     content_type :json
+
+    label, key = params[:facet].split(".")
     
-    search_key = $neo.get_schema_index(params[:facet]).first["property-keys"].first
-    
-    cypher = "MATCH node:#{params[:facet]} 
-              RETURN node.#{search_key} AS label
+    cypher = "MATCH node:#{label} 
+              RETURN node.#{key}? AS label
               ORDER BY label
               LIMIT 25"
     
-    values = $neo.execute_query(cypher)["data"].flatten.to_json
+    values = $neo.execute_query(cypher)["data"].flatten.collect{|d| d.to_s}.to_json
   end
 
 
   get '/values/:facet/:term' do
     content_type :json
     
-    search_key = $neo.get_schema_index(params[:facet]).first["property-keys"].first
+    label, key = params[:facet].split(".")
     
-    cypher = "MATCH node:#{params[:facet]} 
-              WHERE node.#{search_key} =~ {term}
-              RETURN node.#{search_key} AS label
+    cypher = "MATCH node:#{label} 
+              WHERE node.#{key} =~ {term}
+              RETURN node.#{key}? AS label
               ORDER BY label
               LIMIT 25"
     
