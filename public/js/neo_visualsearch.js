@@ -1,3 +1,5 @@
+var visualSearch;
+
 $(document).ready(function() {
   var facets=[];
   $.ajax("/facets", {
@@ -8,7 +10,7 @@ $(document).ready(function() {
         }
     });	
 
-    var visualSearch = VS.init({
+    visualSearch = VS.init({
       container  : $('#search_box_container'),
       query      : '',
       showFacets : true,
@@ -37,16 +39,40 @@ $(document).ready(function() {
           }, 2000);
         },
         facetMatches : function(callback) {
-          callback(facets);
+	      if(visualSearch.searchBox.value() != "") {
+			  $.ajax("/connected_facets", {
+			         type:"POST",
+			         dataType:"json",
+			         data: visualSearch.searchQuery.facets().slice(-1)[0],
+			         success:function (res) {
+			            callback(res);
+			        }
+			    });	
+
+          } else { 
+            callback(facets);
+          }
         },
         valueMatches : function(facet, searchTerm, callback) {
-		  $.ajax("/values/" + facet + "/" + searchTerm, {
-		         type:"GET",
-		         dataType:"json",
-		         success:function (res) {
-		            callback(res);
-		        }
-		    });	
+          if(visualSearch.searchBox.value() != "") {
+	          console.log(visualSearch.searchQuery.facets().slice(-1));
+			  $.ajax("/connected_values/" + facet + "/" + searchTerm, {
+			         type:"POST",
+			         dataType:"json",
+			         data: visualSearch.searchQuery.facets()[0],
+			         success:function (res) {
+			            callback(res);
+			        }
+			    });		
+	      } else {
+			  $.ajax("/values/" + facet + "/" + searchTerm, {
+			         type:"GET",
+			         dataType:"json",
+			         success:function (res) {
+			            callback(res);
+			        }
+			    });	
+			}
         }
       }
     });
