@@ -43,7 +43,7 @@ $(document).ready(function() {
 			  $.ajax("/connected_facets", {
 			         type:"POST",
 			         dataType:"json",
-			         data: visualSearch.searchQuery.facets().slice(-1)[0],
+			         data: {facets : visualSearch.searchQuery.facets().slice(-1)[0] },
 			         success:function (res) {
 			            callback(res);
 			        }
@@ -54,12 +54,12 @@ $(document).ready(function() {
           }
         },
         valueMatches : function(facet, searchTerm, callback) {
+	      console.log(visualSearch.searchQuery.facets());
           if(visualSearch.searchBox.value() != "") {
-	          console.log(visualSearch.searchQuery.facets().slice(-1));
 			  $.ajax("/connected_values/" + facet + "/" + searchTerm, {
 			         type:"POST",
 			         dataType:"json",
-			         data: visualSearch.searchQuery.facets()[0],
+			         data: {facets: visualSearch.searchQuery.facets() }, //.slice(-1)[0]
 			         success:function (res) {
 			            callback(res);
 			        }

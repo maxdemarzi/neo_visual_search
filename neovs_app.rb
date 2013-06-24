@@ -68,9 +68,9 @@ class App < Sinatra::Base
 
   post '/connected_facets' do
     content_type :json
-
-    label, key = params.keys.first.split(".")
-    value = params.values.first
+    
+    label, key = params["facets"].keys.first.split(".")
+    value = params["facets"].values.first
     
     cypher = "MATCH node:#{label} -- related
               WHERE node.#{key}? = {value} 
@@ -78,7 +78,6 @@ class App < Sinatra::Base
               RETURN COLLECT(related_labels)"
               
     categories = $neo.execute_query(cypher, {:value => value})["data"].flatten.uniq              
-
     facets = []
     categories.each do |cat| 
       get_properties(cat).each do |label|
@@ -91,8 +90,10 @@ class App < Sinatra::Base
   
   post '/connected_values/:facet/' do
     content_type :json
-    label, key = params.keys.first.split(".")
-    value = params.values.first
+    
+    label, key = params["facets"].to_a[-2].last.keys.first.split(".")
+    value = params["facets"].to_a[-2].last.values.first
+    value = value.to_i unless value.to_s.match(/[^[:digit:]]+/)
     related_label, related_key = params[:facet].split(".")
     
     cypher = "MATCH node:#{label} -- related:#{related_label}
@@ -101,7 +102,6 @@ class App < Sinatra::Base
               RETURN label
               ORDER BY label
               LIMIT 25"
-    
     values = $neo.execute_query(cypher, {:value => value})["data"].flatten.collect{|d| d.to_s}.to_json
   end
   
