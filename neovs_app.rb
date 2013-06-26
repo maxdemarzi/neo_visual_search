@@ -75,7 +75,7 @@ class App < Sinatra::Base
     content_type :json
     
     label, key = params["facets"].keys.first.split(".")
-    value = params["facets"].values.first
+    value = get_value(params["facets"].values.first)
     
     cypher = "MATCH node:#{label} -- related
               WHERE node.#{key}? = {value} 
@@ -106,7 +106,7 @@ class App < Sinatra::Base
               WITH related.#{related_key} AS label, COUNT(*) AS cnt
               RETURN label
               ORDER BY label
-              LIMIT 25"
+              LIMIT 25"              
     values = $neo.execute_query(cypher, {:value => value})["data"].flatten.collect{|d| d.to_s}.to_json
   end
 
@@ -125,15 +125,21 @@ class App < Sinatra::Base
     cypher << match.join(" -- ")
     cypher << " WHERE "
     cypher << where.join(" AND ")
-    cypher << " RETURN EXTRACT(n in nodes(p): [ID(n), COALESCE(n.name?, n.title?,''), LABELS(n)])"
+    cypher << " RETURN EXTRACT(n in nodes(p): [ID(n), COALESCE(n.name?, n.title?,''), LABELS(n)]), 
+                       EXTRACT(r in relationships(p): [ID(startNode(r)), ID(endNode(r))])"
 
     parameters = {}
     values.each_with_index do |x, index|
       parameters["value#{index}"] = get_value(x)
     end
 
-    graph = $neo.execute_query(cypher, parameters)["data"]       
-    results = {:nodes => graph[0][0].collect{|x| {:id => x[0], :data => {:name => x[1], :description => x[1], :type => x[2].first} }}}
+    graph = $neo.execute_query(cypher, parameters)["data"]     
+    results = {
+               :nodes => graph.collect{|x| {:id => x[0][0][0], :data => {:name => x[0][0][1], 
+                                                                         :description => x[0][0][1], 
+                                                                         :type => x[0][0][2].first} }},
+               :rels  => graph[0][1].collect{|x| {:source => x[0], :target => x[1] }}
+               }
     results.to_json
   end
 

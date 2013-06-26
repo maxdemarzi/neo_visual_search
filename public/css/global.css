@@ -1,3 +1,27 @@
+header, section, nav { display:block; }
+
+header {
+	margin: 0;
+	padding: 5px;
+	position: absolute;
+	top: 5px;
+	left: 0px;
+	right: 0px;
+}
+
+header section#title p {
+	margin: 0;
+	padding: 0;
+	margin-left: 10px;
+	font-size:12px;
+	line-height:1.4;	
+}
+
+section#content {
+	padding-top: 60px;
+} 
+
+
 /*
 -----------------------------------------
  Graph
@@ -23,5 +47,5 @@
 
 #neograph > svg {
     width: 100%;
-    height: 100%; 
+    height: 80%; 
 }

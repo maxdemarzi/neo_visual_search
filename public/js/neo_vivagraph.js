@@ -5,6 +5,17 @@ function addNode(id, data) {
     return node;
 }
 
+function addEdges(edges) {
+    for (n in edges) {
+        var edge=edges[n];
+        var found=false;
+        graph.forEachLinkedNode(edge.source, function (node, link) {
+            if (node.id==edge.target) found=true;
+        });
+        if (!found && edge.source && edge.target) graph.addLink(edge.source, edge.target);
+    }	
+}
+
 function addNeo(graph, data) {
     for (n in data.edges) {
         if (data.edges[n].source) {

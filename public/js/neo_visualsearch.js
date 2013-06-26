@@ -47,6 +47,8 @@ $(document).ready(function() {
                      var node=res.nodes[n];
 			        addNode(node.id, node.data);
 		          }
+		
+		          addEdges(res.rels);
 		       }
 		    });	
 
@@ -67,7 +69,6 @@ $(document).ready(function() {
           }
         },
         valueMatches : function(facet, searchTerm, callback) {
-	      console.log(visualSearch.searchQuery.facets());
           if(visualSearch.searchBox.value() != "") {
 			  $.ajax("/connected_values/" + facet + "/" + searchTerm, {
 			         type:"POST",
