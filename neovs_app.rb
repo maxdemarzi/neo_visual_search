@@ -134,9 +134,7 @@ class App < Sinatra::Base
 
     graph = $neo.execute_query(cypher, parameters)["data"]       
     results = {:nodes => graph[0][0].collect{|x| {:id => x[0], :data => {:name => x[1], :description => x[1], :type => x[2].first} }}}
-    puts results.inspect
     results.to_json
-    
   end
 
   get '/related/:id' do
@@ -148,11 +146,14 @@ class App < Sinatra::Base
                      ID(related), LABELS(related), related"
 
     connections = $neo.execute_query(cypher)["data"]   
-    connections.collect{|n| {"source" => n[0], "source_data" => {:name => n[2]["name"] || n[2]["title"], 
+    
+    results = connections.collect{|n| {"source" => n[0], "source_data" => {:name => n[2]["data"]["name"] || n[2]["data"]["title"] || n[2]["data"].first, 
                                                                  :description => n[2],
                                                                  :type => n[1].first },
-                             "target" => n[3], "target_data" => {:name => n[5]["name"] || n[5]["title"],
+                             "target" => n[3], "target_data" => {:name => n[5]["data"]["name"] || n[5]["data"]["title"] || n[5]["data"].first,
                                                                  :description => n[5],
-                                                                 :type => n[4].first}} }.to_json
+                                                                 :type => n[4].first}} }
+     results.to_json
+                                                                 
   end  
 end

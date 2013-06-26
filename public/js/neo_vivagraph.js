@@ -51,7 +51,7 @@ function onLoad() {
    highlightRelatedNodes = function(nodeId, isOn) {
       graph.forEachLinkedNode(nodeId, function(node, link){
           if (link && link.ui) {
-              link.ui.attr('stroke', isOn ? 'white' : 'gray');
+              link.ui.attr('stroke', isOn ? 'red' : 'gray');
           }
       });
    };
