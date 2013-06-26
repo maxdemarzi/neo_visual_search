@@ -2,13 +2,19 @@
 %html
   %head
     %link(rel="stylesheet" href="/css/visualsearch-datauri.css")
+    %link(rel="stylesheet" href="/css/global.css")
+    %link(rel="stylesheet" href="/css/jquery-ui.css")
+    %script{:src => "/js/jquery.js"}
+    %script{:src => "/js/jquery-ui.min.js"}
     %script{:src => "/js/dependencies.js"}
+    %script{:src => "/js/vivagraph.min.js"}
+    %script{:src => "/js/neo_vivagraph.js"}
     %script{:src => "/js/visualsearch.js"}
     %script{:src => "/js/neo_visualsearch.js"}
     %title Neo Visual Search
 
-  %body
-    %div#graph
+  %body{:onload => "onLoad()"}
+    %div#neograph
     %header
       %section#title
         %h1 Neo Visual Search

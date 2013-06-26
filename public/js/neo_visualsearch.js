@@ -37,6 +37,19 @@ $(document).ready(function() {
               queue: false
             });
           }, 2000);
+
+		  $.ajax("/graph", {
+		         type:"POST",
+		         dataType:"json",
+		         data: {facets : visualSearch.searchQuery.facets() },
+		         success:function (res) {
+  	      	       for (n in res.nodes) {
+                     var node=res.nodes[n];
+			        addNode(node.id, node.data);
+		          }
+		       }
+		    });	
+
         },
         facetMatches : function(callback) {
 	      if(visualSearch.searchBox.value() != "") {

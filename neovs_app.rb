@@ -19,6 +19,11 @@ class App < Sinatra::Base
       cypher = "MATCH n:#{category} RETURN n LIMIT 1"
       $neo.execute_query(cypher)["data"].first.first["data"].keys
     end
+    
+    def get_value(value)
+      value = value.to_i unless value.to_s.match(/[^[:digit:]]+/)
+      value
+    end
   end
 
   get '/' do
@@ -104,5 +109,50 @@ class App < Sinatra::Base
               LIMIT 25"
     values = $neo.execute_query(cypher, {:value => value})["data"].flatten.collect{|d| d.to_s}.to_json
   end
-  
+
+  post '/graph' do
+    content_type :json
+    match, where, values = [], [], []
+    params["facets"].each_with_index do |x, index| 
+      label, key = x[1].keys.first.split(".")
+      value = x[1].values.first
+      match << "node#{index}:#{label}" 
+      where << "node#{index}.#{key}? = {value#{index}}" 
+      values << value
+    end
+    
+    cypher = "MATCH p = "  
+    cypher << match.join(" -- ")
+    cypher << " WHERE "
+    cypher << where.join(" AND ")
+    cypher << " RETURN EXTRACT(n in nodes(p): [ID(n), COALESCE(n.name?, n.title?,''), LABELS(n)])"
+
+    parameters = {}
+    values.each_with_index do |x, index|
+      parameters["value#{index}"] = get_value(x)
+    end
+
+    graph = $neo.execute_query(cypher, parameters)["data"]       
+    results = {:nodes => graph[0][0].collect{|x| {:id => x[0], :data => {:name => x[1], :description => x[1], :type => x[2].first} }}}
+    puts results.inspect
+    results.to_json
+    
+  end
+
+  get '/related/:id' do
+    content_type :json
+
+    cypher = "START me=node(#{params[:id]}) 
+              MATCH me -- related
+              RETURN ID(me), LABELS(me), me, 
+                     ID(related), LABELS(related), related"
+
+    connections = $neo.execute_query(cypher)["data"]   
+    connections.collect{|n| {"source" => n[0], "source_data" => {:name => n[2]["name"] || n[2]["title"], 
+                                                                 :description => n[2],
+                                                                 :type => n[1].first },
+                             "target" => n[3], "target_data" => {:name => n[5]["name"] || n[5]["title"],
+                                                                 :description => n[5],
+                                                                 :type => n[4].first}} }.to_json
+  end  
 end
