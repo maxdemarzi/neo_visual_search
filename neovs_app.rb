@@ -133,13 +133,16 @@ class App < Sinatra::Base
       parameters["value#{index}"] = get_value(x)
     end
 
-    graph = $neo.execute_query(cypher, parameters)["data"]     
+    graph = $neo.execute_query(cypher, parameters)["data"]   
+    nodes = graph.collect{|n| n[0]}
+    rels = graph.collect{|r| r[1]}
+
     results = {
-               :nodes => graph.collect{|x| {:id => x[0][0][0], :data => {:name => x[0][0][1], 
-                                                                         :description => x[0][0][1], 
-                                                                         :type => x[0][0][2].first} }},
-               :rels  => graph[0][1].collect{|x| {:source => x[0], :target => x[1] }}
-               }
+               :nodes => nodes.flatten(1).collect{|x| {:id => x.flatten[0], :data => {:name => x.flatten[1], 
+                                                                           :description => x.flatten[1], 
+                                                                           :type => x.flatten[2]} }},
+               :rels  => rels.collect{|x| x.collect{|x2| {:source => x2[0].to_i, :target => x2[1].to_i }}}.flatten
+               } 
     results.to_json
   end
 
