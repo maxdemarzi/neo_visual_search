@@ -71,18 +71,99 @@ class App < Sinatra::Base
     values = $neo.execute_query(cypher, {:term => "(?i)" + params[:term] + ".*"})["data"].collect{|x| x.first.to_s}.compact.flatten.to_json
   end
 
+  post '/connected_values/:facet/:term' do
+    content_type :json
+
+    related_label, related_key = params[:facet].split(".")
+    
+    match, where, values = [], [], []
+    params["facets"].each_with_index do |x, index| 
+      label, key = x[1].keys.first.split(".")
+      value = x[1].values.first
+      match << "node#{index}:#{label}" 
+      where << "node#{index}.#{key}? = {value#{index}}" 
+      values << value
+    end
+    last_node = params["facets"].size - 1
+    
+    cypher = "MATCH p = "  
+    cypher << match.join(" -- ")
+    cypher << " WHERE "
+    cypher << where[0...-1].join(" AND ")
+    cypher << " AND  node#{last_node}.#{related_key} =~ {term} AND HAS(node#{last_node}.#{related_key})"
+    cypher << " WITH LAST(EXTRACT(n in NODES(p) : n.#{related_key}?)) AS label, COUNT(*) AS cnt"
+    cypher << " RETURN label
+                ORDER BY label
+                LIMIT 25"    
+    
+    parameters = {}
+    values.each_with_index do |x, index|
+      parameters["value#{index}"] = get_value(x)
+    end
+    parameters[:term] = "(?i)" + params[:term] + ".*"    
+
+    values = $neo.execute_query(cypher, parameters)["data"].flatten.collect{|d| d.to_s}.to_json
+  end
+
+
+  post '/connected_values/:facet/' do
+    content_type :json
+    related_label, related_key = params[:facet].split(".")
+    
+    match, where, values = [], [], []
+    params["facets"].each_with_index do |x, index| 
+      label, key = x[1].keys.first.split(".")
+      value = x[1].values.first
+      match << "node#{index}:#{label}" 
+      where << "node#{index}.#{key}? = {value#{index}}" 
+      values << value
+    end
+    last_node = params["facets"].size - 1
+    
+    cypher = "MATCH p = "  
+    cypher << match.join(" -- ")
+    cypher << " WHERE "
+    cypher << where[0...-1].join(" AND ")
+    cypher << " AND HAS(node#{last_node}.#{related_key})"
+    cypher << " WITH LAST(EXTRACT(n in NODES(p) : n.#{related_key}?)) AS label, COUNT(*) AS cnt"
+    cypher << " RETURN label
+                ORDER BY label
+                LIMIT 25"    
+    
+    parameters = {}
+    values.each_with_index do |x, index|
+      parameters["value#{index}"] = get_value(x)
+    end
+        
+    values = $neo.execute_query(cypher, parameters)["data"].flatten.collect{|d| d.to_s}.to_json
+  end
+  
+  
   post '/connected_facets' do
     content_type :json
+
+    match, where, values = [], [], []
+    params["facets"].each_with_index do |x, index| 
+      label, key = x[1].keys.first.split(".")
+      value = x[1].values.first
+      match << "node#{index}:#{label}" 
+      where << "node#{index}.#{key}? = {value#{index}}" 
+      values << value
+    end
     
-    label, key = params["facets"].keys.first.split(".")
-    value = get_value(params["facets"].values.first)
-    
-    cypher = "MATCH node:#{label} -- related
-              WHERE node.#{key}? = {value} 
-              WITH LABELS(related) AS related_labels, COUNT(*) AS cnt
-              RETURN COLLECT(related_labels)"
-              
-    categories = $neo.execute_query(cypher, {:value => value})["data"].flatten.uniq              
+    cypher = "MATCH p = "  
+    cypher << match.join(" -- ")
+    cypher << "-- related WHERE "
+    cypher << where.join(" AND ")
+    cypher << " WITH LABELS(LAST(NODES(p))) AS related_labels, COUNT(*) AS cnt"
+    cypher << " RETURN COLLECT (related_labels)"
+                                         
+    parameters = {}
+    values.each_with_index do |x, index|
+      parameters["value#{index}"] = get_value(x)
+    end
+
+    categories = $neo.execute_query(cypher, parameters)["data"].flatten.uniq
     facets = []
     categories.each do |cat| 
       get_properties(cat).each do |label|
@@ -92,23 +173,6 @@ class App < Sinatra::Base
     facets.to_json
   end
   
-  
-  post '/connected_values/:facet/' do
-    content_type :json
-    
-    label, key = params["facets"].to_a[-2].last.keys.first.split(".")
-    value = params["facets"].to_a[-2].last.values.first
-    value = value.to_i unless value.to_s.match(/[^[:digit:]]+/)
-    related_label, related_key = params[:facet].split(".")
-    
-    cypher = "MATCH node:#{label} -- related:#{related_label}
-              WHERE node.#{key}? = {value} AND HAS(related.#{related_key})
-              WITH related.#{related_key} AS label, COUNT(*) AS cnt
-              RETURN label
-              ORDER BY label
-              LIMIT 25"              
-    values = $neo.execute_query(cypher, {:value => value})["data"].flatten.collect{|d| d.to_s}.to_json
-  end
 
   post '/graph' do
     content_type :json

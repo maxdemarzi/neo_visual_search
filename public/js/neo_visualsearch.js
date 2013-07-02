@@ -58,7 +58,7 @@ $(document).ready(function() {
 			  $.ajax("/connected_facets", {
 			         type:"POST",
 			         dataType:"json",
-			         data: {facets : visualSearch.searchQuery.facets().slice(-1)[0] },
+			         data: {facets : visualSearch.searchQuery.facets() }, //.slice(-1)[0]
 			         success:function (res) {
 			            callback(res);
 			        }
