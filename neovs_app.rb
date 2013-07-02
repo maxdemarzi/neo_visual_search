@@ -177,7 +177,7 @@ class App < Sinatra::Base
     match, where, values = prepare_query(params)
     
     cypher = prepare_cypher(match,where)
-    cypher << " RETURN EXTRACT(n in nodes(p): [ID(n), COALESCE(n.name?, n.title?,''), LABELS(n)]), 
+    cypher << " RETURN EXTRACT(n in nodes(p): [ID(n), COALESCE(n.name?, n.title?, ID(n)), LABELS(n)]), 
                        EXTRACT(r in relationships(p): [ID(startNode(r)), ID(endNode(r))])"
 
     parameters = prepare_parameters(values)
