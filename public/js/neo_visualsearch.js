@@ -27,7 +27,7 @@ $(document).ready(function() {
           $query.stop().animate({opacity : 1}, {duration: 300, queue: false});
           $query.html('<span class="raquo">&raquo;</span> You searched for: ' +
                       '<b>' + (query || '<i>nothing</i>') + '</b>. ' +
-                      '(' + count + ' facet' + (count==1 ? '' : 's') + ')');
+                      '(' + count + ' node' + (count==1 ? '' : 's') + ')');
           clearTimeout(window.queryHideDelay);
           window.queryHideDelay = setTimeout(function() {
             $query.animate({
