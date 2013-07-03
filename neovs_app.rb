@@ -84,8 +84,8 @@ class App < Sinatra::Base
     
     cypher = "MATCH node:#{label} 
               WHERE HAS(node.#{key})
-              RETURN node.#{key} AS label, COUNT(*)
-              ORDER BY label
+              RETURN node.#{key} AS value, COUNT(*)
+              ORDER BY value
               LIMIT 25"
     
     $neo.execute_query(cypher)["data"].collect{|x| x.first.to_s}.compact.flatten.to_json
@@ -99,8 +99,8 @@ class App < Sinatra::Base
     
     cypher = "MATCH node:#{label} 
               WHERE HAS(node.#{key}) AND node.#{key} =~ {term}
-              RETURN node.#{key} AS label, COUNT(*)
-              ORDER BY label
+              RETURN node.#{key} AS value, COUNT(*)
+              ORDER BY value
               LIMIT 25"
     
     $neo.execute_query(cypher, {:term => "(?i).*" + params[:term] + ".*"})["data"].collect{|x| x.first.to_s}.compact.flatten.to_json
@@ -119,8 +119,8 @@ class App < Sinatra::Base
     where << "HAS(node#{last_node}.#{related_key})"
 
     cypher  = prepare_cypher(match,where)
-    cypher << "WITH LAST(EXTRACT(n in NODES(p) : n.#{related_key}?)) AS label, COUNT(*) AS cnt "
-    cypher << "RETURN label ORDER BY label LIMIT 25"    
+    cypher << "WITH LAST(EXTRACT(n in NODES(p) : n.#{related_key}?)) AS value, COUNT(*) AS cnt "
+    cypher << "RETURN value ORDER BY value LIMIT 25"    
 
     parameters = prepare_parameters(values)
     parameters[:term] = "(?i).*" + params[:term] + ".*"    
@@ -140,8 +140,8 @@ class App < Sinatra::Base
     where << "HAS(node#{last_node}.#{related_key})"
     
     cypher  = prepare_cypher(match,where)
-    cypher << "WITH LAST(EXTRACT(n in NODES(p) : n.#{related_key}?)) AS label, COUNT(*) AS cnt "
-    cypher << "RETURN label ORDER BY label LIMIT 25"    
+    cypher << "WITH LAST(EXTRACT(n in NODES(p) : n.#{related_key}?)) AS value, COUNT(*) AS cnt "
+    cypher << "RETURN value ORDER BY value LIMIT 25"    
     
     parameters = prepare_parameters(values)
 
