@@ -84,7 +84,7 @@ class App < Sinatra::Base
     
     cypher = "MATCH node:#{label} 
               WHERE HAS(node.#{key})
-              RETURN node.#{key} AS value, COUNT(*)
+              RETURN DISTINCT node.#{key} AS value
               ORDER BY value
               LIMIT 25"
     
@@ -99,7 +99,7 @@ class App < Sinatra::Base
     
     cypher = "MATCH node:#{label} 
               WHERE HAS(node.#{key}) AND node.#{key} =~ {term}
-              RETURN node.#{key} AS value, COUNT(*)
+              RETURN DISTINCT node.#{key} AS value
               ORDER BY value
               LIMIT 25"
     
@@ -140,8 +140,8 @@ class App < Sinatra::Base
     where << "HAS(node#{last_node}.#{related_key})"
     
     cypher  = prepare_cypher(match,where)
-    cypher << "WITH LAST(EXTRACT(n in NODES(p) : n.#{related_key}?)) AS value, COUNT(*) AS cnt "
-    cypher << "RETURN value ORDER BY value LIMIT 25"    
+    cypher << "WITH LAST(EXTRACT(n in NODES(p) : n.#{related_key}?)) AS value "
+    cypher << "RETURN DISTINCT value ORDER BY value LIMIT 25"    
     
     parameters = prepare_parameters(values)
 
@@ -157,8 +157,8 @@ class App < Sinatra::Base
     match << "related"
     
     cypher  = prepare_cypher(match,where)
-    cypher << "WITH LABELS(LAST(NODES(p))) AS related_labels, COUNT(*) AS cnt "
-    cypher << "RETURN COLLECT (related_labels)"
+    cypher << "WITH LABELS(LAST(NODES(p))) AS related_labels "
+    cypher << "RETURN COLLECT (DISTINCT related_labels)"
                                          
     parameters = prepare_parameters(values)
 
