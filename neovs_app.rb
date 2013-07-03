@@ -83,7 +83,8 @@ class App < Sinatra::Base
     label, key = get_label_and_key(params)
     
     cypher = "MATCH node:#{label} 
-              RETURN node.#{key}? AS label, COUNT(*)
+              WHERE HAS(node.#{key})
+              RETURN node.#{key} AS label, COUNT(*)
               ORDER BY label
               LIMIT 25"
     
@@ -97,8 +98,8 @@ class App < Sinatra::Base
     label, key = get_label_and_key(params)
     
     cypher = "MATCH node:#{label} 
-              WHERE node.#{key} =~ {term}
-              RETURN node.#{key}? AS label, COUNT(*)
+              WHERE HAS(node.#{key}) AND node.#{key} =~ {term}
+              RETURN node.#{key} AS label, COUNT(*)
               ORDER BY label
               LIMIT 25"
     
@@ -143,7 +144,7 @@ class App < Sinatra::Base
     cypher << "RETURN label ORDER BY label LIMIT 25"    
     
     parameters = prepare_parameters(values)
-        
+
     $neo.execute_query(cypher, parameters)["data"].flatten.collect{|d| d.to_s}.to_json
   end
   
