@@ -1,4 +1,4 @@
-START n=node(*) MATCH (n)-[r?]-() DELETE r,n;
+START n=node(*) OPTIONAL MATCH (n)-[r]-() DELETE r,n;
 CREATE (TheMatrix {title:'The Matrix', released:1999, tagline:'Welcome to the Real World'})
 CREATE (Keanu {name:'Keanu Reeves', born:1964})
 CREATE (Carrie {name:'Carrie-Anne Moss', born:1967})
@@ -501,3 +501,4 @@ CREATE
   (JamesThompson)-[:REVIEWED {summary:'Fun, but a little far fetched', rating:65}]->(TheDaVinciCode)
 
 RETURN ID(TheMatrix);
+
