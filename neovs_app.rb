@@ -17,7 +17,7 @@ class App < Sinatra::Base
   helpers do
     
     def get_properties(category)
-      cypher = "MATCH n:#{category} RETURN n LIMIT 1"
+      cypher = "MATCH (n:#{category}) RETURN n LIMIT 1"
       $neo.execute_query(cypher)["data"].first.first["data"].keys
     end
     
@@ -39,8 +39,8 @@ class App < Sinatra::Base
       params["facets"].each_with_index do |x, index| 
         label, key = x[1].keys.first.split(".")
         value = x[1].values.first
-        match << "node#{index}:#{label}" 
-        where << "node#{index}.#{key}? = {value#{index}}" 
+        match << "(node#{index}:#{label})" 
+        where << "node#{index}.#{key} = {value#{index}}" 
         values << value
       end
       return match, where, values
@@ -82,7 +82,7 @@ class App < Sinatra::Base
 
     label, key = get_label_and_key(params)
     
-    cypher = "MATCH node:#{label} 
+    cypher = "MATCH (node:#{label})
               WHERE HAS(node.#{key})
               RETURN DISTINCT node.#{key} AS value
               ORDER BY value
@@ -97,7 +97,7 @@ class App < Sinatra::Base
     
     label, key = get_label_and_key(params)
     
-    cypher = "MATCH node:#{label} 
+    cypher = "MATCH (node:#{label})
               WHERE HAS(node.#{key}) AND node.#{key} =~ {term}
               RETURN DISTINCT node.#{key} AS value
               ORDER BY value
@@ -119,7 +119,7 @@ class App < Sinatra::Base
     where << "HAS(node#{last_node}.#{related_key})"
 
     cypher  = prepare_cypher(match,where)
-    cypher << "WITH LAST(EXTRACT(n in NODES(p) : n.#{related_key}?)) AS value, COUNT(*) AS cnt "
+    cypher << "WITH LAST(EXTRACT(n in NODES(p) | n.#{related_key})) AS value, COUNT(*) AS cnt "
     cypher << "RETURN value ORDER BY value LIMIT 25"    
 
     parameters = prepare_parameters(values)
@@ -140,7 +140,7 @@ class App < Sinatra::Base
     where << "HAS(node#{last_node}.#{related_key})"
     
     cypher  = prepare_cypher(match,where)
-    cypher << "WITH LAST(EXTRACT(n in NODES(p) : n.#{related_key}?)) AS value "
+    cypher << "WITH LAST(EXTRACT(n in NODES(p) | n.#{related_key})) AS value "
     cypher << "RETURN DISTINCT value ORDER BY value LIMIT 25"    
     
     parameters = prepare_parameters(values)
@@ -159,7 +159,7 @@ class App < Sinatra::Base
     cypher  = prepare_cypher(match,where)
     cypher << "WITH LABELS(LAST(NODES(p))) AS related_labels "
     cypher << "RETURN COLLECT (DISTINCT related_labels)"
-                                         
+
     parameters = prepare_parameters(values)
 
     categories = $neo.execute_query(cypher, parameters)["data"].flatten.uniq
@@ -178,8 +178,8 @@ class App < Sinatra::Base
     match, where, values = prepare_query(params)
     
     cypher = prepare_cypher(match,where)
-    cypher << " RETURN EXTRACT(n in nodes(p): [ID(n), COALESCE(n.name?, n.title?, ID(n)), LABELS(n)]), 
-                       EXTRACT(r in relationships(p): [ID(startNode(r)), ID(endNode(r))])"
+    cypher << " RETURN EXTRACT(n in nodes(p)| [ID(n), COALESCE(n.name, n.title, ID(n)), LABELS(n)]), 
+                       EXTRACT(r in relationships(p)| [ID(startNode(r)), ID(endNode(r))])"
 
     parameters = prepare_parameters(values)
 
@@ -216,3 +216,4 @@ class App < Sinatra::Base
   end  
   
 end
+
