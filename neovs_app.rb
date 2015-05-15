@@ -3,7 +3,7 @@ Bundler.require(:default, (ENV["RACK_ENV"]|| 'development').to_sym)
 
 require 'sinatra/base'
 
-$neo = Neography::Rest.new    
+$neo = Neography::Rest.new(ENV['NEO4J_URL'] || "http://localhost:7474")
 
 class App < Sinatra::Base
   
