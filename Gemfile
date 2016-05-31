@@ -2,7 +2,7 @@ source 'https://rubygems.org'
 
 # Stack
 gem 'foreman'
-gem 'thin'
+#gem 'thin'
 
 # Sinatra
 gem 'sinatra', :require => 'sinatra/base'

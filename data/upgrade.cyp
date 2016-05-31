@@ -5,27 +5,27 @@ CREATE INDEX ON :Producer(name);
 CREATE INDEX ON :Movie(title);
 CREATE INDEX ON :User(name);
 
-MATCH node
-WHERE has(node.title)
+MATCH (node)
+WHERE node.title IS NOT NULL
 SET node:Movie;
 
-MATCH node
+MATCH (node)
 WHERE (node)-[:ACTED_IN]->()
 SET node:Actor;
 
-MATCH node
+MATCH (node)
 WHERE (node)-[:DIRECTED]->()
 SET node:Director;
 
-MATCH node
+MATCH (node)
 WHERE (node)-[:WROTE]->()
 SET node:Writer;
 
-MATCH node
+MATCH (node)
 WHERE (node)-[:PRODUCED]->()
 SET node:Producer;
 
-MATCH node
+MATCH (node)
 WHERE (node)-[:FOLLOWS]-()
 SET node:User;
 

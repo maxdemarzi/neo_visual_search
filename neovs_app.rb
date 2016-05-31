@@ -83,7 +83,7 @@ class App < Sinatra::Base
     label, key = get_label_and_key(params)
     
     cypher = "MATCH (node:#{label})
-              WHERE HAS(node.#{key})
+              WHERE node.#{key} IS NOT NULL
               RETURN DISTINCT node.#{key} AS value
               ORDER BY value
               LIMIT 25"
@@ -98,7 +98,7 @@ class App < Sinatra::Base
     label, key = get_label_and_key(params)
     
     cypher = "MATCH (node:#{label})
-              WHERE HAS(node.#{key}) AND node.#{key} =~ {term}
+              WHERE node.#{key} IS NOT NULL AND node.#{key} =~ {term}
               RETURN DISTINCT node.#{key} AS value
               ORDER BY value
               LIMIT 25"
@@ -116,7 +116,7 @@ class App < Sinatra::Base
 
     where.pop
     where << "node#{last_node}.#{related_key} =~ {term}"
-    where << "HAS(node#{last_node}.#{related_key})"
+    where << "node#{last_node}.#{related_key} IS NOT NULL"
 
     cypher  = prepare_cypher(match,where)
     cypher << "WITH LAST(EXTRACT(n in NODES(p) | n.#{related_key})) AS value, COUNT(*) AS cnt "
@@ -137,7 +137,7 @@ class App < Sinatra::Base
     last_node = get_last_node_id(params)
     
     where.pop
-    where << "HAS(node#{last_node}.#{related_key})"
+    where << "node#{last_node}.#{related_key} IS NOT NULL"
     
     cypher  = prepare_cypher(match,where)
     cypher << "WITH LAST(EXTRACT(n in NODES(p) | n.#{related_key})) AS value "
@@ -154,7 +154,7 @@ class App < Sinatra::Base
 
     match, where, values = prepare_query(params)
     
-    match << "related"
+    match << "(related)"
     
     cypher  = prepare_cypher(match,where)
     cypher << "WITH LABELS(LAST(NODES(p))) AS related_labels "
@@ -200,7 +200,7 @@ class App < Sinatra::Base
     content_type :json
 
     cypher = "START me=node(#{params[:id]}) 
-              MATCH me -- related
+              MATCH (me) -- (related)
               RETURN ID(me), LABELS(me), me, 
                      ID(related), LABELS(related), related"
 
